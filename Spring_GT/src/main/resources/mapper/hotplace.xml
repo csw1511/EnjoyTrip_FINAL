@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.ssafy.hotplace.model.mapper.HotplaceMapper">
+
+	<resultMap type="hotplaceDto" id="place">
+		<result column="article_no" property="articleNo"/>
+		<result column="title" property="title"/>
+		<result column="user_id" property="userId"/>
+		<result column="user_nickname" property="userNickname"/>
+		<result column="content_id" property="contentId"/>
+		<result column="first_image" property="firstImage"/>
+		<result column="first_image2" property="firstImage2"/>
+		<result column="hit" property="hit"/>
+		<result column="regist_time" property="registTime"/>
+		<result column="latitude" property="latitude"/>
+		<result column="longitude" property="longitude"/>
+		<result column="overview" property="overview"/>
+		<result column="addr1" property="addr1"/>
+		<result column="addr2" property="addr2"/>
+		<result column="memo" property="memo"/>
+		<result column="favorite_count" property="favoriteCount"/>
+	</resultMap>
+	
+	
+	<!--  핫플레이스 장소 id 등록 하기-->
+	<insert id="registHotplaceId" parameterType="int">
+		insert ignore into hotplaceid(content_id) value(#{contentId})
+	</insert>
+	
+	
+	<insert id="registHotplace" parameterType="HotplaceDto">
+		insert into hotplace(user_id, content_id, memo, regist_time)
+		value(#{userId}, #{contentId}, #{memo}, #{registTime})
+	</insert>
+
+	<select id="listPlace" parameterType="int" resultMap="place">
+		select hi.content_id, ai.title, ai.first_image, ai.first_image2, ai.addr1, ai.addr2, ad.overview, ai.latitude, ai.longitude
+		from hotplaceid hi
+		join attraction_info ai
+		on hi.content_id = ai.content_id
+		join attraction_description ad
+		on hi.content_id  = ad.content_id
+	</select>
+	
+	<!-- 해당 핫플레이스에 대한 관련 피드들을 가져오는 select구문 -->
+	<select id="getHotplace" parameterType="int" resultMap="place">
+		select h.article_no, ai.title, h.user_id, m.user_nickname, h.content_id, ai.first_image, ai.first_image2, h.hit, h.regist_time,
+			h.memo, ai.addr1, ai.addr2, ad.overview,
+			(select count(article_no) from favoritehotplace fh
+			where fh.article_no = h.article_no) as favorite_count
+			from hotplace h
+			join attraction_info ai
+			on h.content_id = ai.content_id
+			join attraction_description ad
+			on h.content_id  = ad.content_id
+	        join members m
+	        on h.user_id = m.user_id
+			where h.content_id = #{contentId};
+	</select>
+	
+	<update id="updateHit" parameterType="int">
+		update hotplace
+		set hit = hit + 1
+		where article_no = #{articleNo}
+	</update>
+	
+	<!-- 로그인한 유저가 해당 게시글에 좋아요를 이미 눌렀는지 확인 -->
+	<select id="checkFavorite" parameterType="map" resultType="int">
+		select count(*) from favoritehotplace
+		where article_no = #{articleNo}
+		and user_id = #{userId}
+	</select>
+	
+	<!-- 해당 게시글의 좋아요 추가 -->
+	<insert id="addFavorite" parameterType="map">
+		insert into favoritehotplace(article_no, user_id)
+		values(#{articleNo}, #{userId})
+	</insert>
+	
+	<!-- 해당 게시글의 좋아요 삭제 -->
+	<insert id="deleteFavorite" parameterType="map">
+		delete from favoritehotplace
+		where article_no=#{articleNo} and user_id = #{userId}
+	</insert>		
+</mapper>

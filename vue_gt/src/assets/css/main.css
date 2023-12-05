@@ -1,0 +1,29 @@
+* {
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+#content-main {
+  height: 915px;
+  background-image: url("https://cdn.pixabay.com/photo/2014/03/03/16/12/village-279013_1280.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+#main_container {
+	margin-top: 200px;
+}
+#search-main * {
+  font-size: 20px;
+}
+
+#search-result {
+  margin: 0;
+  height: 915px;
+}
+
+#map {
+  width: 800px;
+  height: 500px;
+}
+
+

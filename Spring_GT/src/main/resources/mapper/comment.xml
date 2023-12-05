@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.ssafy.comment.model.mapper.CommentMapper">
+
+	<resultMap type="commentDto" id="commentDto">
+		<result column="comment_id" property="commentId"/>
+		<result column="comment" property="comment"/>
+		<result column="user_id" property="userId"/>
+		<result column="register_time" property="registerTime"/>
+		<result column="article_no" property="articleNo"/>
+		<result column="user_nickname" property="userNickname"/>
+	</resultMap>	
+	
+	<!-- 댓글 작성 -->
+	<insert id="addComment" parameterType="commentDto">
+		insert into comments (comment, user_id, article_no)
+		values (#{comment}, #{userId}, #{articleNo})
+	</insert>
+	
+	<!-- 댓글 조회 -->
+	<select id="getCommentList" parameterType="int" resultMap="commentDto">
+		select c.comment_id, c.comment, c.user_id, c.register_time, c.article_no, m.user_nickname
+		from comments c join members m
+		on c.user_id = m.user_id
+		where c.article_no=#{articleNo}
+	</select>
+	
+	<!-- 댓글 수정   -->
+	<update id="updateComment" parameterType="CommentInputDto">
+		update comments
+		set comment = #{comment}
+		where comment_id = #{commentId}
+	</update>
+	
+	<!-- 댓글 삭제 -->
+	<delete id="deleteComment" parameterType="int">
+		delete from comments
+		where comment_id = #{commentId}
+	</delete>
+	
+</mapper>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.ssafy.travel.model.mapper.TravelMapper">
+
+	<resultMap type="sidoGugunCodeDto" id="sidoGugun">
+		<result column="sido_code" property="sidoCode"/>
+		<result column="sido_name" property="sidoName"/>
+		<result column="gugun_code" property="gugunCode"/>
+		<result column="gugun_name" property="gugunName"/>
+	</resultMap>
+	
+	<resultMap type="attractionDto" id="attraction">
+		<result column="content_id" property="contentId"/>
+		<result column="content_type_id" property="contentTypeId"/>
+		<result column="content_type_name" property="contentTypeName"/>
+		<result column="title" property="title"/>
+		<result column="addr1" property="addr1"/>
+		<result column="overview" property="overview"/>
+		<result column="zipcode" property="zipcode"/>
+		<result column="first_image" property="firstImage"/>
+		<result column="first_image2" property="firstImage2"/>
+		<result column="sido_code" property="sidoCode"/>
+		<result column="gugun_code" property="gugunCode"/>
+		<result column="latitude" property="latitude"/>
+		<result column="longitude" property="longitude"/>
+	</resultMap>
+	
+	<resultMap type="findByContentIdDto" id="fidbycontentid" extends="attraction">
+		<result column="plan_id" property="planId"/>
+		<result column="plan_order" property="planOrder"/>
+		<result column="memo" property="memoEachAttr"/>
+	</resultMap>
+	
+	<resultMap type="planDto" id="plan">
+		<result column="plan_id" property="planId"/>
+		<result column="title" property="title"/>
+		<result column="content" property="content"/>
+		<result column="user_id" property="userId"/>
+		<result column="user_nickname" property="userNickname"/>
+		<result column="start_date" property="startDate"/>
+		<result column="end_date" property="endDate"/>
+		<result column="article_no" property="articleNo"/>
+	</resultMap>
+	
+	
+
+	
+
+	<select id="getSido" resultMap="sidoGugun">
+		select sido_code, sido_name
+		from sido
+		order by sido_code
+	</select>
+	
+	<select id="getGugunInSido" parameterType="string" resultMap="sidoGugun">
+		select gugun_code, gugun_name, sido_code
+		from gugun
+		where sido_code = #{sido}
+	</select>
+	
+	<select id="getAttractions" parameterType="map" resultMap="attraction">
+		select i.content_id, i.content_type_id, ct.content_type_name, i.title, i.addr1, d.overview, i.zipcode, i.first_image, i.first_image2, i.sido_code, i.gugun_code, i.latitude, i.longitude
+		from attraction_info i, attraction_description d, attraction_content_types ct
+		where i.content_id = d.content_id and i.content_type_id = ct.content_type_id
+		<if test="type != null and type != ''">
+			and i.content_type_id = #{type}
+		</if>
+		<if test="sido != null and sido != '' and gugun != null and gugun != ''">
+			and sido_code=#{sido} and gugun_code=#{gugun}
+		</if>
+			limit 20
+	</select>
+	
+	<select id="searchAttraction" parameterType="string" resultMap="attraction">
+		select i.content_id, i.content_type_id, ct.content_type_name, i.title, i.addr1, d.overview, i.zipcode, i.first_image, i.first_image2, i.sido_code, i.gugun_code, i.latitude, i.longitude
+		from attraction_info i, attraction_description d, attraction_content_types ct
+		where i.content_id = d.content_id and i.content_type_id = ct.content_type_id
+		and i.title like CONCAT('%', #{title}, '%')
+		limit 20
+	</select>
+	
+	<insert id="savePlan" parameterType="PlanDto">
+		insert into plan(title, content, user_id, start_date, end_date)
+		values(#{title}, #{content}, #{userId}, #{startDate}, #{endDate});
+	</insert>
+	
+	<select id="getPlanId" resultType="int">
+		select max(plan_id) from plan
+	</select>
+	
+	<insert id="savePlanDetail" parameterType="PlanDetailDto">
+		insert into plan_detail(plan_id, plan_order, content_id, memo)
+		values(#{planId}, #{planOrder}, #{contentId}, #{memo});
+	</insert>
+	
+	<select id="findBySelectedAttr" parameterType="String" resultMap="fidbycontentid">
+		select pd.plan_id, pd.plan_order, pd.memo, pd.content_id, ai.content_type_id, ct.content_type_name, ai.title, ai.addr1, ad.overview, ai.zipcode, ai.first_image, ai.first_image2, ai.sido_code, ai.gugun_code, ai.latitude, ai.longitude
+		from plan_detail pd, attraction_info ai, attraction_description ad, attraction_content_types ct
+		where pd.plan_id in (
+			select distinct plan_id 
+			from plan_detail
+			where content_id = #{contentId}
+		)
+		and pd.content_id = ai.content_id
+		and ai.content_id = ad.content_id
+		and ai.content_type_id = ct.content_type_id
+	</select>
+	
+	<select id="findByUserId" parameterType="String" resultMap="fidbycontentid">
+		select pd.plan_id, pd.plan_order, pd.memo, pd.content_id, ai.content_type_id, ct.content_type_name, ai.title, ai.addr1, ad.overview, ai.zipcode, ai.first_image, ai.first_image2, ai.sido_code, ai.gugun_code, ai.latitude, ai.longitude
+		from plan_detail pd, attraction_info ai, attraction_description ad, attraction_content_types ct
+		where pd.content_id = ai.content_id
+		and ai.content_id = ad.content_id
+		and ai.content_type_id = ct.content_type_id
+		<if test="userId != null and userId != ''">
+		and pd.plan_id in (
+			select plan_id
+			from plan
+			where user_id = #{userId}
+		)
+		</if>
+	</select>
+	
+	<select id="planList" parameterType="String" resultMap="plan">
+		select p.plan_id, p.title, p.content, m.user_id, m. user_nickname, p.start_date, p.end_date, p.article_no
+		from plan p, members m
+		where p.user_id = m.user_id
+	</select>
+	
+	<select id="planListByPlanId" parameterType="int" resultMap="plan">
+		select p.plan_id, p.title, p.content, m.user_id, m. user_nickname, p.start_date, p.end_date, p.article_no
+		from plan p, members m
+		where p.user_id = m.user_id
+		and p.plan_id = #{planId}
+	</select>
+	
+	<select id="plansByPlanId" parameterType="int" resultMap="fidbycontentid">
+		select pd.plan_id, pd.plan_order, pd.memo, pd.content_id, ai.content_type_id, ct.content_type_name, ai.title, ai.addr1, ad.overview, ai.zipcode, ai.first_image, ai.first_image2, ai.sido_code, ai.gugun_code, ai.latitude, ai.longitude
+		from plan_detail pd, attraction_info ai, attraction_description ad, attraction_content_types ct
+		where pd.content_id = ai.content_id
+		and ai.content_id = ad.content_id
+		and ai.content_type_id = ct.content_type_id
+		and pd.plan_id = #{planId}
+	</select>
+	
+	<update id="updatePlanArticleNo" parameterType="UpdatePlanArticleNoDto">
+		update plan
+		set article_no = #{articleNo}
+		where plan_id = #{planId};
+	</update>
+</mapper>

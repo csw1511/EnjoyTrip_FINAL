@@ -1,0 +1,37 @@
+*{
+    font-family: "Noto Sans KR", sans-serif;
+}
+
+.navbar-nav li a:hover{
+    color: #1DB954;
+    
+}
+
+#content-main {
+    height: 500px;
+}
+
+#search-box{
+    background-color: #fff;
+    border: 1px solid #d9d9d9;
+    
+}
+
+#search-box * {
+    font-size: 20px;
+}
+  
+
+  /* #searchInput{
+    background-color: #d9d9d9d9;
+  } */
+
+
+/* .carousel-inner {
+    width: auto;
+    height: 250px; /* 이미지 높이 변경 */
+/*}*/
+.card{
+    display: inline-block;
+    margin-inline-start: 10px;
+}
